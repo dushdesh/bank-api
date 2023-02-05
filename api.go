@@ -28,6 +28,7 @@ func NewApiServer(listenAddr string, accountStore AccountStorage, userService *U
 func (s *ApiServer) Run() {
 	router := chi.NewRouter()
 	router.HandleFunc("/signup", makeHttpHandleFunc(s.handleUser))
+	router.HandleFunc("/login", makeHttpHandleFunc(s.handleLogin))
 	router.HandleFunc("/user", makeHttpHandleFunc(s.handleUser))
 	router.HandleFunc("/user/{id}", makeHttpHandleFunc(s.handleGetUserById))
 
@@ -50,6 +51,7 @@ func (s *ApiServer) handleUser(w http.ResponseWriter, r *http.Request) error {
 	return fmt.Errorf("method not allowed: %s", r.Method)
 }
 
+
 func (s *ApiServer) handleSignup(w http.ResponseWriter, r *http.Request) error {
 	createUserReq := new(CreatUserRequest)
 	if err := json.NewDecoder(r.Body).Decode(createUserReq); err != nil {
@@ -63,6 +65,26 @@ func (s *ApiServer) handleSignup(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	return WriteJSON(w, http.StatusCreated, token)
+}
+
+func (s *ApiServer) handleLogin(w http.ResponseWriter, r *http.Request) error {
+	if r.Method != "POST" {
+		return fmt.Errorf("method not allowed: %s", r.Method)
+	}
+
+	loginRequest := new(LoginRequest)
+	if err := json.NewDecoder(r.Body).Decode(loginRequest); err != nil {
+		return err
+	}
+	defer r.Body.Close()
+
+
+	token, err := s.userService.Login(loginRequest)
+	if err != nil {
+		return fmt.Errorf("authentication failure")
+	}
+	
+	return WriteJSON(w, http.StatusOK, token)
 }
 
 func (s *ApiServer) handleGetAllUsers(w http.ResponseWriter, r *http.Request) error {

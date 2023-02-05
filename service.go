@@ -28,21 +28,16 @@ func (s *UserService) SignUp(u *CreatUserRequest) (*Token, error) {
 		return nil, fmt.Errorf("user create failed: %d", err)
 	}
 
-	token, err := generateJWT(userId, u.Email)
+	return generateJWT(userId, u.Email)
+}
+
+func (s *UserService) Login(r *LoginRequest) (*Token, error) {
+	user, err := s.userStore.GetUserByEmail(r.Email)
 	if err != nil {
 		return nil, err
 	}
-
-	return &Token{token}, err
-}
-
-func (s *UserService) Login(email, password string) (string, error) {
-	user, err := s.userStore.GetUserByEmail(email)
-	if err != nil {
-		return "", err
-	}
-	if match := checkPasswordHash(password, user.HashPassword); !match {
-		return "", fmt.Errorf("authentication failure PWD-01")
+	if match := checkPasswordHash(r.Password, user.HashPassword); !match {
+		return nil, fmt.Errorf("authentication failure PWD-01")
 	}
 
 	return generateJWT(user.ID.Hex(), user.Email)
@@ -71,7 +66,7 @@ func (claims *MyCustomClaims) Valid() error {
 
 var mySigningKey = []byte("DFiend")
 
-func generateJWT(userId, userEmail string) (string, error) {
+func generateJWT(userId, userEmail string) (*Token, error) {
 	claims := &MyCustomClaims{
 		userId,
 		userEmail,
@@ -81,7 +76,8 @@ func generateJWT(userId, userEmail string) (string, error) {
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(mySigningKey)
+	jwt, err := token.SignedString(mySigningKey)
+	return &Token{jwt}, err
 }
 
 func hashPassword(password string) (string, error) {
