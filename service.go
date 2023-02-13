@@ -51,6 +51,10 @@ func (s *UserService) GetUserById(id string) (*User, error) {
 	return s.userStore.GetUserById(id)
 }
 
+func (s *UserService) DeleteUserById(id string) error {
+	return s.userStore.DeleteUserById(id)
+}
+
 type MyCustomClaims struct {
 	UserId           string `json:"userId"`
 	UserEmail        string `json:"userEmail"`

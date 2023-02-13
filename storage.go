@@ -18,7 +18,7 @@ type UserStorage interface {
 	GetUsers() ([]*User, error)
 	GetUserByEmail(string) (*User, error)
 	GetUserById(string) (*User, error)
-	DeleteUser(string) error
+	DeleteUserById(string) error
 }
 
 type MongoStorage struct {
@@ -123,7 +123,6 @@ func (c *MongoUserCollection) GetUsers() ([]*User, error) {
 }
 
 func (c *MongoUserCollection) GetUserByEmail(email string) (*User, error) {
-
 	filter := bson.M{"email": email}
 	user := new(User)
 	if err := c.findOne(filter, user); err != nil {
@@ -136,9 +135,8 @@ func (c *MongoUserCollection) GetUserByEmail(email string) (*User, error) {
 func (c *MongoUserCollection) GetUserById(idStr string) (*User, error) {
 	docId, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
-		return nil, fmt.Errorf("bad user id: %s", idStr)
+		return nil, fmt.Errorf("mongo: bad user ID string provided")
 	}
-
 	filter := bson.M{"_id": docId}
 	user := new(User)
 	if err := c.findOne(filter, user); err != nil {
@@ -148,9 +146,20 @@ func (c *MongoUserCollection) GetUserById(idStr string) (*User, error) {
 	return user, nil
 }
 
-func (c *MongoUserCollection) DeleteUser(id string) error {
+func (c *MongoUserCollection) DeleteUserById(idStr string) error {
+	id, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		return fmt.Errorf("mongo: bad user ID string provided")
+	}
+	filter := bson.M{"_id": id}
+	update := bson.M{"$set": bson.M{"tombstone": true}}
+	_, err = c.collection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		return fmt.Errorf("mongo: failed to delete user with id: %s, err: %v", id, err)
+	}
 	return nil
 }
+
 
 type AccountStorage interface {
 	CreateAccount(*Account) error

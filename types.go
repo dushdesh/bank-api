@@ -14,6 +14,7 @@ type User struct {
 	LastName     string             `json:"lastName" bson:"last_name"`
 	HashPassword string             `json:"password" bson:"hash_password"`
 	CreatedAt    time.Time          `json:"createdAt" bson:"created_at"`
+	Tombstone    bool               `json:"tombstone,omitempty" bson:"tombstone"`
 }
 
 type CreatUserRequest struct {
