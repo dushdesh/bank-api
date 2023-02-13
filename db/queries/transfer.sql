@@ -9,7 +9,7 @@ INSERT INTO transfers (
 
 -- name: GetTransfer :one
 SELECT * FROM transfers
-WHERE id = ? LIMIT 1;
+WHERE id = $1 LIMIT 1;
 
 -- name: ListTransfersFromAccount :many
 SELECT * FROM transfers
