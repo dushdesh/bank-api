@@ -9,7 +9,8 @@ import (
 var alphabets = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()"
 
 func init() {
-	rand.Seed(time.Now().UnixNano())
+	seed := time.Now().UnixNano()
+	rand.New(rand.NewSource(seed))
 }
 
 // RandomInt generates a random number between min and max
@@ -30,6 +31,11 @@ func RandomString(n int) string {
 	return sb.String()
 }
 
+// RandomBool generates and random tru or false
+func RandomBool() bool {
+	return rand.Intn(2) == 0
+}
+
 // RandomOwner genrates a random owner id
 func RandomOwner() string {
 	return RandomString(6)
@@ -38,6 +44,12 @@ func RandomOwner() string {
 // RandomAmount genrated random amounts
 func RandomAmount() int64 {
 	return RandomInt(0, 1000)
+}
+
+// RandomSignedAmount generates a signed amount
+func RandomSignedAmount() int64 {
+	if RandomBool() { return -RandomAmount() }
+	return RandomAmount()
 }
 
 // RandomCurrency generates randomm currency codes

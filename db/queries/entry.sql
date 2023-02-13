@@ -6,6 +6,11 @@ INSERT INTO entries (
   $1, $2
 ) RETURNING id;
 
+ -- name: GetEntry :one
+SELECT * FROM entries
+WHERE id = $1
+AND account_id = $2;
+
  -- name: ListEntries :many
 SELECT * FROM entries
 WHERE account_id = $1
