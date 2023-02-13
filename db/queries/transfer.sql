@@ -31,4 +31,5 @@ WHERE to_account_id = $1
 AND from_account_id = $2
 ORDER BY id
 LIMIT $3
-OFFSET $4;
+OFFSET $4
+;

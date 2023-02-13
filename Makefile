@@ -28,6 +28,6 @@ run: build
 	@./bin/bank
 
 test:
-	@go test -v ./...
+	@go test -v -cover ./...
 
 .PHONY: postgres mongo db createdb dropdb migrateup migratedown sqlc build run test
