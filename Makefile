@@ -4,7 +4,15 @@ postgres:
 mongo:
 	docker run --name bank-api-mongo -p 27017:27017 -d mongo
 
-db: postgres mongo
+db:	postgres mongo
+
+pgstart:
+	docker start bank-api-pg
+
+mongostart:
+	docker start bank-api-mongo
+
+dbstart: pgstart mongostart
 
 createdb:
 	docker exec -it bank-api-pg createdb --username=postgres --owner=postgres bank-api
@@ -30,4 +38,4 @@ run: build
 test:
 	@go test -v -cover ./...
 
-.PHONY: postgres mongo db createdb dropdb migrateup migratedown sqlc build run test
+.PHONY: postgres mongo db pgstart mongostart dbstart createdb dropdb migrateup migratedown sqlc build run test
