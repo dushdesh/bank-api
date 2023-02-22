@@ -46,8 +46,8 @@ type TransferTxResult struct {
 	ToAccountID   int64 `json:"to_account_id"`
 	FromEntryID   int64 `json:"from_entry_id"`
 	ToEntryID     int64 `json:"to_entry_id"`
-	FromBalance   int64 `json:"from_balance`
-	ToBalance     int64 `json:"to_balance`
+	FromBalance   int64 `json:"from_balance"`
+	ToBalance     int64 `json:"to_balance"`
 }
 
 func (store *Store) TransferTx(ctx context.Context, arg TransferTxParms) (TransferTxResult, error) {
@@ -78,28 +78,58 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParms) (Transf
 		}
 
 		// update account balances
-		fmt.Println("Remove from account", arg.Amount)
-		addFromAccResult, err := q.AddAccountBalance(ctx, AddAccountBalanceParams{
-			Amount: -arg.Amount,
-			ID:     arg.FromAccountID,
-		})
-		if err != nil {
-			return err
+		// To avoid deadlock between concurrent transactions always
+		// add or remove from the account with the smallest ID
+
+		if (arg.FromAccountID < arg.ToAccountID){
+			fmt.Println("Remove from account", arg.Amount)
+			addFromAccResult, err := q.AddAccountBalance(ctx, AddAccountBalanceParams{
+				Amount: -arg.Amount,
+				ID:     arg.FromAccountID,
+			})
+			if err != nil {
+				return err
+			}
+
+			fmt.Println("Add to account", arg.Amount)
+			addToAccResult, err := q.AddAccountBalance(ctx, AddAccountBalanceParams{
+				Amount: arg.Amount,
+				ID:     arg.ToAccountID,
+			})
+			if err != nil {
+				return err
+			}
+			result.FromAccountID = addFromAccResult.ID
+			result.FromBalance = addFromAccResult.Balance
+			result.ToAccountID = addToAccResult.ID
+			result.ToBalance = addToAccResult.Balance
+
+			} else {
+
+			fmt.Println("Add to account", arg.Amount)
+			addToAccResult, err := q.AddAccountBalance(ctx, AddAccountBalanceParams{
+				Amount: arg.Amount,
+				ID:     arg.ToAccountID,
+			})
+			if err != nil {
+				return err
+			}
+
+			fmt.Println("Remove from account", arg.Amount)
+			addFromAccResult, err := q.AddAccountBalance(ctx, AddAccountBalanceParams{
+				Amount: -arg.Amount,
+				ID:     arg.FromAccountID,
+			})
+			if err != nil {
+				return err
+			}
+
+			result.FromAccountID = addFromAccResult.ID
+			result.FromBalance = addFromAccResult.Balance
+			result.ToAccountID = addToAccResult.ID
+			result.ToBalance = addToAccResult.Balance
 		}
 
-		fmt.Println("Add to account", arg.Amount)
-		addToAccResult, err := q.AddAccountBalance(ctx, AddAccountBalanceParams{
-			Amount: arg.Amount,
-			ID:     arg.ToAccountID,
-		})
-		if err != nil {
-			return err
-		}
-		result.FromAccountID = addFromAccResult.ID
-		result.FromBalance = addFromAccResult.Balance
-		result.ToAccountID = addToAccResult.ID
-		result.ToBalance = addToAccResult.Balance
-		
 		return nil
 	})
 

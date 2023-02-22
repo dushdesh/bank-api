@@ -108,61 +108,42 @@ func TestDeadlockTransferTx(t *testing.T) {
 	// run concurrent routines to test the transaction
 	n := 10
 	amount := int64(10)
-	errs := make(chan error, 10)
-	results := make(chan TransferTxResult, 10)
+
+	errs := make(chan (error), 10)
 
 	for i := 0; i < n; i++ {
-		if i%2 == 0 {
-			go func() {
-				result, err := store.TransferTx(context.Background(), TransferTxParms{
-					FromAccountID: acc1_id,
-					ToAccountID:   acc2_id,
-					Amount:        amount,
-				})
-				errs <- err
-				results <- result
-			}()
-		} else {
-			go func() {
-				result, err := store.TransferTx(context.Background(), TransferTxParms{
-					ToAccountID:   acc1_id,
-					FromAccountID: acc2_id,
-					Amount:        amount,
-				})
-				errs <- err
-				results <- result
-			}()
+
+		fromAccountID := acc1_id
+		toAccountID := acc2_id
+
+		if i%2 == 1 {
+			fromAccountID = acc2_id
+			toAccountID = acc1_id
 		}
+
+		go func() {
+			_, err := store.TransferTx(context.Background(), TransferTxParms{
+				FromAccountID: fromAccountID,
+				ToAccountID:   toAccountID,
+				Amount:        amount,
+			})
+			errs <- err
+		}()
 	}
 
-	existed := make(map[int]bool)
+	// Check final account balance
 	for i := 0; i < n; i++ {
 		err := <-errs
 		require.NoError(t, err)
-// Check account balnace
-		fmt.Println(">>tx:", result.FromBalance, result.ToBalance)
-
-		diff1 := args1.Balance - result.FromBalance
-		diff2 := result.ToBalance - args2.Balance
-		require.Equal(t, diff1, diff2)
-		require.True(t, diff1 > 0)
-		require.True(t, diff1%amount == 0) // for every transaction the amount will be reduced by amount, 2*amount, 3*amount ..
-
-		k := int(diff1 / amount)
-		require.True(t, k >= 1 && k <= n)
-		require.NotContains(t, existed, k)
-		existed[k] = true
 	}
 	close(errs)
-	close(results)
 
-	// Check final account balance
-	acc1, err := testQueries.GetAccount(context.Background(), acc1_id)
+	updatedAcc1, err := testQueries.GetAccount(context.Background(), acc1_id)
 	require.NoError(t, err)
-	acc2, err := testQueries.GetAccount(context.Background(), acc2_id)
+	updatedAcc2, err := testQueries.GetAccount(context.Background(), acc2_id)
 	require.NoError(t, err)
 
-	fmt.Println(">>after:", acc1.Balance, acc2.Balance)
-	require.Equal(t, args1.Balance-int64(n)*amount, acc1.Balance)
-	require.Equal(t, args2.Balance+int64(n)*amount, acc2.Balance)
+	fmt.Println(">>after:", updatedAcc1.Balance, updatedAcc2.Balance)
+	require.Equal(t, args1.Balance, updatedAcc1.Balance)
+	require.Equal(t, args2.Balance, updatedAcc2.Balance)
 }
