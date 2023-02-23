@@ -82,56 +82,47 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParms) (Transf
 		// add or remove from the account with the smallest ID
 
 		if (arg.FromAccountID < arg.ToAccountID){
-			fmt.Println("Remove from account", arg.Amount)
-			addFromAccResult, err := q.AddAccountBalance(ctx, AddAccountBalanceParams{
-				Amount: -arg.Amount,
-				ID:     arg.FromAccountID,
-			})
+			result.FromAccountID, result.ToAccountID, result.FromBalance, result.ToBalance, err = moveMoney(ctx, q, arg.FromAccountID, -arg.Amount, arg.ToAccountID, arg.Amount)
 			if err != nil {
 				return err
 			}
-
-			fmt.Println("Add to account", arg.Amount)
-			addToAccResult, err := q.AddAccountBalance(ctx, AddAccountBalanceParams{
-				Amount: arg.Amount,
-				ID:     arg.ToAccountID,
-			})
+		} else {
+			result.ToAccountID, result.FromAccountID, result.ToBalance, result.FromBalance, err = moveMoney(ctx, q, arg.ToAccountID, arg.Amount, arg.FromAccountID, -arg.Amount)
 			if err != nil {
 				return err
 			}
-			result.FromAccountID = addFromAccResult.ID
-			result.FromBalance = addFromAccResult.Balance
-			result.ToAccountID = addToAccResult.ID
-			result.ToBalance = addToAccResult.Balance
-
-			} else {
-
-			fmt.Println("Add to account", arg.Amount)
-			addToAccResult, err := q.AddAccountBalance(ctx, AddAccountBalanceParams{
-				Amount: arg.Amount,
-				ID:     arg.ToAccountID,
-			})
-			if err != nil {
-				return err
-			}
-
-			fmt.Println("Remove from account", arg.Amount)
-			addFromAccResult, err := q.AddAccountBalance(ctx, AddAccountBalanceParams{
-				Amount: -arg.Amount,
-				ID:     arg.FromAccountID,
-			})
-			if err != nil {
-				return err
-			}
-
-			result.FromAccountID = addFromAccResult.ID
-			result.FromBalance = addFromAccResult.Balance
-			result.ToAccountID = addToAccResult.ID
-			result.ToBalance = addToAccResult.Balance
 		}
-
 		return nil
 	})
 
 	return result, err
+}
+
+func moveMoney(
+	ctx context.Context,
+	q *Queries,
+	accountID1 int64,
+	amt1 int64,
+	accountID2 int64,
+	amt2 int64,
+) (accID1, accID2, bal1, bal2 int64, err error) {
+	account1, err := q.AddAccountBalance(ctx, AddAccountBalanceParams{
+			ID: accountID1,
+			Amount: amt1,
+	})
+	if err != nil {
+		return
+	}
+	account2, err := q.AddAccountBalance(ctx, AddAccountBalanceParams{
+		ID: accountID2,
+		Amount: amt2,
+	})
+	if err != nil {
+		return
+	}
+	accID1 = account1.ID
+	bal1 = account1.Balance
+	accID2 = account2.ID
+	bal2 = account2.Balance
+	return
 }

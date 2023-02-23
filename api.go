@@ -39,8 +39,6 @@ func (s *ApiServer) Run() {
 			// router.Get("{id}/account/{accountId}", withAuth(makeHttpHandleFunc(s.handleAccountByID)))
 		})
 
-	r.Mount("/admin", adminRouter())
-
 	r.Route("/admin", func(r chi.Router) {
 		r.Get("/user", makeHttpHandleFunc(s.handleGetAllUsers))
 		r.HandleFunc("/account", makeHttpHandleFunc(s.handleAccount))
@@ -149,22 +147,6 @@ func (s *ApiServer) handleAccount(w http.ResponseWriter, r *http.Request) error 
 	return fmt.Errorf("method not allowed: %s", r.Method)
 }
 
-func adminRouter() http.Handler {
-	r := chi.NewRouter()
-	r.Use(AdminOnly)
-}
-
-func AdminOnly(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		perm, ok := ctx.Value("acl.permission").(YourPermissionType)
-		if !ok || !perm.IsAdmin() {
-			http.Error(w, http.StatusText(403), 403)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
-}
 
 // func (s *ApiServer) handleAccountByID(w http.ResponseWriter, r *http.Request) error {
 // 	id := chi.URLParam(r, "id")
