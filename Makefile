@@ -21,10 +21,10 @@ dropdb:
 	docker exec -it bank-api-pg dropdb --username=postgres bank-api
 
 migrateup:
-	./bin/migrate -path db/migration/ -database "postgresql://postgres:bank-api-db@localhost:5432/bank-api?sslmode=disable" -verbose up
+	migrate -path db/migration/ -database "postgresql://postgres:bank-api-db@localhost:5432/bank-api?sslmode=disable" -verbose up
 
 migratedown:
-	./bin/migrate -path db/migration/ -database "postgresql://postgres:bank-api-db@localhost:5432/bank-api?sslmode=disable" -verbose down
+	migrate -path db/migration/ -database "postgresql://postgres:bank-api-db@localhost:5432/bank-api?sslmode=disable" -verbose down
 
 sqlc:
 	./bin/sqlc generate
