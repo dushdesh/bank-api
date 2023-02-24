@@ -27,7 +27,7 @@ migratedown:
 	migrate -path db/migration/ -database "postgresql://postgres:bank-api-db@localhost:5432/bank-api?sslmode=disable" -verbose down
 
 sqlc:
-	./bin/sqlc generate
+	sqlc generate
 
 build:
 	@go build -o bin/bank
