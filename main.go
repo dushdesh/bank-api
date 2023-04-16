@@ -1,27 +1,32 @@
 package main
 
-import "log"
+import (
+	"bank/api"
+	db "bank/db/sqlc"
+	"database/sql"
+	"log"
+
+	_ "github.com/lib/pq"
+)
+
+const (
+	dbDriver      = "postgres"
+	dbSource      = "postgresql://postgres:bank-api-db@localhost:5432/bank-api?sslmode=disable"
+	serverAddress = "0.0.0.0:3000"
+)
 
 func main() {
-	mongoStore, err := NewMongoStorage()
+
+	conn, err := sql.Open(dbDriver, dbSource)
 	if err != nil {
-		log.Fatal("Mongo DB connection failed: ", err)
+		log.Fatal("cannot connect to the DB:", err)
 	}
-	defer close(mongoStore)
 
-	
-	userStore := NewMongoCollection(mongoStore, "bank-api", "users")
-	userService := NewUserService(userStore)
+	store := db.NewStore(conn)
+	server := api.NewServer(store)
 
-	accountStore, err := NewPostgresStore()
+	err = server.Start(serverAddress)
 	if err != nil {
-		log.Fatal("PG DB connection failed: ", err)
+		log.Fatal("cannot run server", err.Error())
 	}
-
-	if err = accountStore.Init(); err != nil {
-		log.Fatal("PG table cannot be created: ", err)
-	}
-
-	server := NewApiServer(":3000", accountStore, userService)
-	server.Run()
 }

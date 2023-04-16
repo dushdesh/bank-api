@@ -38,4 +38,13 @@ run: build
 test:
 	@go test -v -cover ./...
 
-.PHONY: postgres mongo db pgstart mongostart dbstart createdb dropdb migrateup migratedown sqlc build run test
+server:
+	go run main.go
+
+docker:
+	sudo service docker start
+
+portcheck:
+	lsof -i $(port)
+
+.PHONY: postgres mongo db pgstart mongostart dbstart createdb dropdb migrateup migratedown sqlc build run test server docker 

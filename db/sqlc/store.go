@@ -79,7 +79,7 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParms) (Transf
 
 		// update account balances
 		// To avoid deadlock between concurrent transactions always
-		// add or remove from the account with the smallest ID
+		// add or remove from the account with the smallest ID first
 
 		if (arg.FromAccountID < arg.ToAccountID){
 			result.FromAccountID, result.ToAccountID, result.FromBalance, result.ToBalance, err = moveMoney(ctx, q, arg.FromAccountID, -arg.Amount, arg.ToAccountID, arg.Amount)
