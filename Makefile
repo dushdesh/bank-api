@@ -38,6 +38,9 @@ run: build
 test:
 	@go test -v -cover ./...
 
+mock:
+	mockgen -package mockdb -destination db/mock/store.go bank/db/sqlc Store
+
 server:
 	go run main.go
 
@@ -47,4 +50,4 @@ docker:
 portcheck:
 	lsof -i $(port)
 
-.PHONY: postgres mongo db pgstart mongostart dbstart createdb dropdb migrateup migratedown sqlc build run test server docker 
+.PHONY: postgres mongo db pgstart mongostart dbstart createdb dropdb migrateup migratedown sqlc build run test server docker mock

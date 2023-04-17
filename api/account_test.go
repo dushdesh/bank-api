@@ -4,7 +4,10 @@ import (
 	mockdb "bank/db/mock"
 	db "bank/db/sqlc"
 	"bank/util"
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -40,13 +43,24 @@ func TestAccountApi(t *testing.T) {
 
 	// Check response http status code
 	require.Equal(t, http.StatusOK, recorder.Code)
+	requireBodyMatchAccount(t, recorder.Body, account)
 }
 
 func randomAccount() db.Account {
 	return db.Account{
-		ID: util.RandomInt(1, 1000),
-		Owner: util.RandomOwner(),
+		ID:       util.RandomInt(1, 1000),
+		Owner:    util.RandomOwner(),
 		Currency: util.RandomCurrency(),
-		Balance: util.RandomAmount(),
+		Balance:  util.RandomAmount(),
 	}
+}
+
+func requireBodyMatchAccount(t *testing.T, body *bytes.Buffer, account db.Account) {
+	data, err := io.ReadAll(body)
+	require.NoError(t, err)
+
+	var gotAccount db.Account
+	err = json.Unmarshal(data, &gotAccount)
+	require.NoError(t, err)
+	require.Equal(t, account, gotAccount)
 }
