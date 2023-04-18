@@ -42,7 +42,7 @@ type apiFunc func(*gin.Context) error
 func makeGinHandlerFunc(f apiFunc) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		if err := f(ctx); err != nil {
-			if e, ok := err.(ApiError); ok { // check to see if the error is ok type ApiError with customer https satus otherwise respond with InternalServer error
+			if e, ok := err.(*ApiError); ok { // check to see if the error is ok type ApiError with customer https satus otherwise respond with InternalServer error
 				ctx.JSON(e.Status, gin.H{"error": err.Error()})
 			}
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
