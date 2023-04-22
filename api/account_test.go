@@ -86,7 +86,6 @@ func TestGetAccountApi(t *testing.T) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
 			},
 		},
-		// TODO: Add more cases to the list later
 	}
 
 

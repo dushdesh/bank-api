@@ -19,10 +19,14 @@ func NewServer(store db.Store) *Server {
 
 	// Add routes
 	server.router = router
+
+	// Accounts
 	router.POST("/accounts", makeGinHandlerFunc(server.createAccount))
 	router.GET("/accounts/:id", makeGinHandlerFunc(server.getAccount))
 	router.GET("/accounts", makeGinHandlerFunc(server.listAccounts))
 
+	// Transfers
+	router.POST("/transfer", makeGinHandlerFunc(server.createTransfer))
 	return server
 }
 
@@ -44,6 +48,7 @@ func makeGinHandlerFunc(f apiFunc) gin.HandlerFunc {
 		if err := f(ctx); err != nil {
 			if e, ok := err.(*ApiError); ok { // check to see if the error is ok type ApiError with customer https satus otherwise respond with InternalServer error
 				ctx.JSON(e.Status, gin.H{"error": err.Error()})
+				return
 			}
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}
