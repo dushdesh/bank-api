@@ -97,7 +97,7 @@ func TestGetAccountApi(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			tc.buildStubs(store)
 
-				// Start a test server and send request
+			// Start a test server and send request
 			server := NewServer(store)
 			recorder := httptest.NewRecorder()
 

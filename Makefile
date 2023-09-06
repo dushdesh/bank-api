@@ -9,6 +9,9 @@ db:	postgres mongo
 pgstart:
 	docker start bank-api-pg
 
+pgconnect:
+	psql postgres://postgres:bank-api-db@localhost:5432/bank-api?sslmode=disable
+
 mongostart:
 	docker start bank-api-mongo
 
@@ -25,6 +28,9 @@ migrateup:
 
 migratedown:
 	migrate -path db/migration/ -database "postgresql://postgres:bank-api-db@localhost:5432/bank-api?sslmode=disable" -verbose down
+
+migratedown1:
+	migrate -path db/migration/ -database "postgresql://postgres:bank-api-db@localhost:5432/bank-api?sslmode=disable" -verbose down 1
 
 sqlc:
 	sqlc generate
@@ -50,4 +56,4 @@ docker:
 portcheck:
 	lsof -i $(port)
 
-.PHONY: postgres mongo db pgstart mongostart dbstart createdb dropdb migrateup migratedown sqlc build run test server docker mock
+.PHONY: postgres mongo db pgstart pgconnect mongostart dbstart createdb dropdb migrateup migratedown sqlc build run test server docker mock

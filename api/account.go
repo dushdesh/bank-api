@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lib/pq"
 )
 
 type createAccountRequest struct {
@@ -27,6 +28,14 @@ func (server *Server) createAccount(ctx *gin.Context) (err error) {
 
 	accountId, err := server.store.CreateAccount(ctx, arg)
 	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			switch pqErr.Code.Name() {
+			case "unique_violation":
+				return &ApiError{Status: http.StatusConflict, Err: pqErr.Error()}
+			case "foreign_key_violation":
+				return &ApiError{Status: http.StatusNotFound, Err: pqErr.Error()}
+			}
+		}
 		return &ApiError{Status: http.StatusInternalServerError, Err: err.Error()}
 	}
 
