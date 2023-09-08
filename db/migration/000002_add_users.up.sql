@@ -8,4 +8,4 @@ CREATE TABLE "users" (
 );
 
 ALTER TABLE "accounts" ADD FOREIGN KEY ("owner") REFERENCES "users" ("username") ON DELETE CASCADE;
-ALTER TABLE "accounts" ADD CONSTRAINT "accounts_owner_currency_key" UNIQUE ("owner", "currency"); 
+ALTER TABLE "accounts" ADD CONSTRAINT "accounts_owner_currency_key" UNIQUE ("owner", "currency");

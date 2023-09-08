@@ -36,6 +36,11 @@ func RandomBool() bool {
 	return rand.Intn(2) == 0
 }
 
+// RandomUser generates a random username and password
+func RandomUser() (string, string) {
+	return RandomString(6), RandomString(10)
+}
+
 // RandomOwner genrates a random owner id
 func RandomOwner() string {
 	return RandomString(6)

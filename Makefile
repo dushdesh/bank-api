@@ -23,6 +23,9 @@ createdb:
 dropdb:
 	docker exec -it bank-api-pg dropdb --username=postgres bank-api
 
+migratecreate:
+	migrate create -ext sql -dir db/migration -seq $(name)
+
 migrateup:
 	migrate -path db/migration/ -database "postgresql://postgres:bank-api-db@localhost:5432/bank-api?sslmode=disable" -verbose up
 
@@ -56,4 +59,4 @@ docker:
 portcheck:
 	lsof -i $(port)
 
-.PHONY: postgres mongo db pgstart pgconnect mongostart dbstart createdb dropdb migrateup migratedown sqlc build run test server docker mock
+.PHONY: postgres mongo db pgstart pgconnect mongostart dbstart createdb dropdb migratecreate migrateup migratedown sqlc build run test server docker mock

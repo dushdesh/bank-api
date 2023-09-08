@@ -24,6 +24,7 @@ func NewServer(store db.Store) *Server {
 	router.POST("/accounts", makeGinHandlerFunc(server.createAccount))
 	router.GET("/accounts/:id", makeGinHandlerFunc(server.getAccount))
 	router.GET("/accounts", makeGinHandlerFunc(server.listAccounts))
+	router.POST("/users", makeGinHandlerFunc(server.createUser))
 
 	// Transfers
 	router.POST("/transfer", makeGinHandlerFunc(server.createTransfer))
