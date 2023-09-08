@@ -13,28 +13,28 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func TestGetAccountApi(t *testing.T) {
 	account := randomAccount()
 
-	testCases := []struct{
-		name string
-		accountID int64
-		buildStubs func(store *mockdb.MockStore)
+	testCases := []struct {
+		name          string
+		accountID     int64
+		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
-			name: "OK",
+			name:      "OK",
 			accountID: account.ID,
 			buildStubs: func(store *mockdb.MockStore) {
 				// Build stubs
 				store.EXPECT().
-				GetAccount(gomock.Any(), gomock.Eq(account.ID)).
-				Times(1).
-				Return(account, nil)
+					GetAccount(gomock.Any(), gomock.Eq(account.ID)).
+					Times(1).
+					Return(account, nil)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				// Check response http status code
@@ -43,14 +43,14 @@ func TestGetAccountApi(t *testing.T) {
 			},
 		},
 		{
-			name: "NotFound",
+			name:      "NotFound",
 			accountID: account.ID,
 			buildStubs: func(store *mockdb.MockStore) {
 				// Build stubs
 				store.EXPECT().
-				GetAccount(gomock.Any(), gomock.Eq(account.ID)).
-				Times(1).
-				Return(db.Account{}, sql.ErrNoRows)
+					GetAccount(gomock.Any(), gomock.Eq(account.ID)).
+					Times(1).
+					Return(db.Account{}, sql.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				// Check response http status code
@@ -58,14 +58,14 @@ func TestGetAccountApi(t *testing.T) {
 			},
 		},
 		{
-			name: "InternalError",
+			name:      "InternalError",
 			accountID: account.ID,
 			buildStubs: func(store *mockdb.MockStore) {
 				// Build stubs
 				store.EXPECT().
-				GetAccount(gomock.Any(), gomock.Eq(account.ID)).
-				Times(1).
-				Return(db.Account{}, sql.ErrConnDone)
+					GetAccount(gomock.Any(), gomock.Eq(account.ID)).
+					Times(1).
+					Return(db.Account{}, sql.ErrConnDone)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				// Check response http status code
@@ -73,13 +73,13 @@ func TestGetAccountApi(t *testing.T) {
 			},
 		},
 		{
-			name: "InvaildID",
+			name:      "InvaildID",
 			accountID: 0,
 			buildStubs: func(store *mockdb.MockStore) {
 				// Build stubs
 				store.EXPECT().
-				GetAccount(gomock.Any(), gomock.Eq(account.ID)).
-				Times(0)
+					GetAccount(gomock.Any(), gomock.Eq(account.ID)).
+					Times(0)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				// Check response http status code
@@ -88,12 +88,10 @@ func TestGetAccountApi(t *testing.T) {
 		},
 	}
 
-
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
-			ctrl.Finish()
-
+			
 			store := mockdb.NewMockStore(ctrl)
 			tc.buildStubs(store)
 

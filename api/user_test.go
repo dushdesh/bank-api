@@ -15,13 +15,13 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang/mock/gomock"
 	"github.com/lib/pq"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 type eqCreateUserParamsMatcher struct {
-	arg db.CreateUserParams
+	arg      db.CreateUserParams
 	password string
 }
 
@@ -39,17 +39,16 @@ func (e eqCreateUserParamsMatcher) Matches(x interface{}) bool {
 	return reflect.DeepEqual(e.arg, arg)
 }
 
-func (e eqCreateUserParamsMatcher) String() string {	
+func (e eqCreateUserParamsMatcher) String() string {
 	return fmt.Sprintf("matches arg %v and password %v", e.arg, e.password)
 }
 
 func EqCreateUserParams(arg db.CreateUserParams, password string) gomock.Matcher {
 	return eqCreateUserParamsMatcher{arg: arg, password: password}
-}	
+}
 
 func TestCreateUserAPI(t *testing.T) {
 	user, password := randomUser()
-	
 
 	testCases := []struct {
 		name          string
@@ -69,7 +68,7 @@ func TestCreateUserAPI(t *testing.T) {
 				arg := db.CreateUserParams{
 					Username: user.Username,
 					FullName: user.FullName,
-					Email: user.Email,
+					Email:    user.Email,
 				}
 				store.EXPECT().
 					CreateUser(gomock.Any(), EqCreateUserParams(arg, password)).
@@ -170,13 +169,12 @@ func TestCreateUserAPI(t *testing.T) {
 		},
 	}
 
-	for i := range testCases {
-		tc := testCases[i]
+	for _, testCase := range testCases {
+		tc := testCase
 
 		t.Run(tc.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-
+			
 			store := mockdb.NewMockStore(ctrl)
 			tc.buildStubs(store)
 
@@ -184,13 +182,17 @@ func TestCreateUserAPI(t *testing.T) {
 			recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
+			fmt.Printf("tc.body: %v\n", tc.body)
 			data, err := json.Marshal(tc.body)
+
 			require.NoError(t, err)
 
 			url := "/users"
 			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
-
+			request.Header.Set("Content-Type", "application/json")
+			
+		
 			server.router.ServeHTTP(recorder, request)
 			tc.checkResponse(recorder)
 		})
@@ -202,7 +204,7 @@ func randomUser() (db.User, string) {
 			Username: util.RandomOwner(),
 			FullName: util.RandomOwner(),
 			Email:    util.RandomEmail(),
-		},	
+		},
 		util.RandomString(6)
 }
 
