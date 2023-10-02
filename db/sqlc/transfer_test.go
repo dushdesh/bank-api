@@ -8,10 +8,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createTransferBetweenAcc(t *testing.T, fromAcc, toAcc int64) (int64, CreateTransferParams){
+func createTransferBetweenAcc(t *testing.T, fromAcc, toAcc Account) (int64, CreateTransferParams){
 	arg := CreateTransferParams{
-		FromAccountID: fromAcc,
-		ToAccountID:   toAcc,
+		FromAccountID: fromAcc.ID,
+		ToAccountID:   toAcc.ID,
 		Amount:        util.RandomAmount(),
 	}
 	traId, err := testQueries.CreateTransfer(context.Background(), arg)
@@ -22,8 +22,8 @@ func createTransferBetweenAcc(t *testing.T, fromAcc, toAcc int64) (int64, Create
 }
 
 func createTestTransfer(t *testing.T) (int64, CreateTransferParams) {
-	fromAcc, _ := createTestAccount(t)
-	toAcc, _ := createTestAccount(t)
+	fromAcc := createTestAccount(t)
+	toAcc := createTestAccount(t)
 	return createTransferBetweenAcc(t, fromAcc, toAcc)
 }
 
@@ -45,16 +45,16 @@ func TestGetTransfer(t *testing.T) {
 
 
 func TestListTransfersBetAccounts(t *testing.T) {
-	fromAcc, _ := createTestAccount(t)
-	toAcc, _ := createTestAccount(t)
+	fromAcc := createTestAccount(t)
+	toAcc := createTestAccount(t)
 
 	for i:=0; i<10; i++ {
 		createTransferBetweenAcc(t, fromAcc, toAcc)
 	}
 
 	params := ListTransfersBetAccountsParams{
-		ToAccountID: toAcc,
-		FromAccountID: fromAcc,
+		ToAccountID: toAcc.ID,
+		FromAccountID: fromAcc.ID,
 		Limit: 5,
 		Offset: 5,
 	}
@@ -65,15 +65,15 @@ func TestListTransfersBetAccounts(t *testing.T) {
 }
 
 func TestListTransfersFromAccount(t *testing.T) {
-	fromAcc, _ := createTestAccount(t)
+	fromAcc := createTestAccount(t)
 
 	for i:=0; i<10; i++ {
-		toAcc, _ := createTestAccount(t)
+		toAcc := createTestAccount(t)
 		createTransferBetweenAcc(t, fromAcc, toAcc)
 	}
 
 	params := ListTransfersFromAccountParams{
-		FromAccountID: fromAcc,
+		FromAccountID: fromAcc.ID,
 		Limit: 5,
 		Offset: 5,
 	}
@@ -85,15 +85,15 @@ func TestListTransfersFromAccount(t *testing.T) {
 
 
 func TestListTransfersToAccount(t *testing.T) {
-	toAcc, _ := createTestAccount(t)
+	toAcc := createTestAccount(t)
 
 	for i:=0; i<10; i++ {
-		fromAcc, _ := createTestAccount(t)
+		fromAcc := createTestAccount(t)
 		createTransferBetweenAcc(t, fromAcc, toAcc)
 	}
 
 	params := ListTransfersToAccountParams{
-		ToAccountID: toAcc,
+		ToAccountID: toAcc.ID,
 		Limit: 5,
 		Offset: 5,
 	}

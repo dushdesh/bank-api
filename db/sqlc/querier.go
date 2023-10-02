@@ -10,7 +10,7 @@ import (
 
 type Querier interface {
 	AddAccountBalance(ctx context.Context, arg AddAccountBalanceParams) (AddAccountBalanceRow, error)
-	CreateAccount(ctx context.Context, arg CreateAccountParams) (int64, error)
+	CreateAccount(ctx context.Context, arg CreateAccountParams) (Account, error)
 	CreateEntry(ctx context.Context, arg CreateEntryParams) (int64, error)
 	CreateTransfer(ctx context.Context, arg CreateTransferParams) (int64, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)

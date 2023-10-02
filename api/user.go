@@ -3,7 +3,6 @@ package api
 import (
 	db "bank/db/sqlc"
 	"bank/util"
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -27,9 +26,8 @@ type UserResponse struct {
 
 func (s *Server) createUser(ctx *gin.Context) (err error) {
 
-	fmt.Println("In Create User")
 	var req CreateUserRequest
-	
+
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		return &ApiError{Status: http.StatusBadRequest, Err: err.Error()}
 	}
@@ -59,12 +57,12 @@ func (s *Server) createUser(ctx *gin.Context) (err error) {
 	}
 
 	// Return the user
-	rsp := UserResponse{	// Create a new UserResponse struct
+	rsp := UserResponse{ // Create a new UserResponse struct
 		Username: user.Username,
 		FullName: user.FullName,
 		Email:    user.Email,
 	}
-	
+
 	ctx.JSON(http.StatusOK, rsp)
 	return
 }

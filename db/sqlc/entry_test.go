@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createTestEntryForAccount(t *testing.T, accId int64) (int64, CreateEntryParams) {
+func createTestEntryForAccount(t *testing.T, acc Account) (int64, CreateEntryParams) {
 	arg := CreateEntryParams{
-		AccountID: accId,
+		AccountID: acc.ID,
 		Amount: util.RandomSignedAmount(),
 	}
 	entId, err := testQueries.CreateEntry(context.Background(), arg)
@@ -20,8 +20,8 @@ func createTestEntryForAccount(t *testing.T, accId int64) (int64, CreateEntryPar
 }
 
 func createTestEntry(t *testing.T) (int64, CreateEntryParams) {
-	accId, _ := createTestAccount(t)
-	return createTestEntryForAccount(t,accId)
+	acc := createTestAccount(t)
+	return createTestEntryForAccount(t,acc)
 }
 
 func TestCreateEntry(t *testing.T) {
@@ -46,19 +46,19 @@ func TestGetEntry(t *testing.T) {
 }
 
 func TestListEntries(t *testing.T) {
-	accId, _ := createTestAccount(t)
+	acc := createTestAccount(t)
 
 	for i:=0; i<10; i++ {
-		createTestEntryForAccount(t, accId)
+		createTestEntryForAccount(t, acc)
 	}
 
 	arg := ListEntriesParams{
-		AccountID: accId,
+		AccountID: acc.ID,
 		Limit: 5,
 		Offset: 5,
 	}
 
-	acc, err := testQueries.ListEntries(context.Background(), arg)
+	result, err := testQueries.ListEntries(context.Background(), arg)
 	require.NoError(t, err)
-	require.Equal(t, 5, len(acc))
+	require.Equal(t, 5, len(result))
 }

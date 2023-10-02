@@ -182,7 +182,6 @@ func TestCreateUserAPI(t *testing.T) {
 			recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
-			fmt.Printf("tc.body: %v\n", tc.body)
 			data, err := json.Marshal(tc.body)
 
 			require.NoError(t, err)
