@@ -59,7 +59,7 @@ func RandomSignedAmount() int64 {
 
 // RandomCurrency generates randomm currency codes
 func RandomCurrency() string {
-	currencies := []string{"CAD", "EUR", "USD", "INR"}
+	currencies := []string{CAD, USD, EUR, INR}
 	n := len(currencies)
 	return currencies[rand.Intn(n)]
 }
