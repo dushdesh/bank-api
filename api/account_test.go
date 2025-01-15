@@ -91,12 +91,12 @@ func TestGetAccountApi(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
-			
+
 			store := mockdb.NewMockStore(ctrl)
 			tc.buildStubs(store)
 
 			// Start a test server and send request
-			server := NewServer(store)
+			server := NewTestServer(t, store)
 			recorder := httptest.NewRecorder()
 
 			// Generate request

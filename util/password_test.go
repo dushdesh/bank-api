@@ -12,7 +12,7 @@ func TestPassword(t *testing.T) {
 	hashedPassword, err := HashPassword(password)
 	require.NoError(t, err)
 	require.NotEmpty(t, hashedPassword)
-	
+
 	err = CheckPassword(password, hashedPassword)
 	require.NoError(t, err)
 

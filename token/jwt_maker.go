@@ -14,7 +14,6 @@ type JWTMaker struct {
 	secretKey string
 }
 
-
 func NewJWTMaker(secretKey string) (Maker, error) {
 	if len(secretKey) < minSecretKeySize {
 		return nil, fmt.Errorf("invalid key size: must be at least %d chars", minSecretKeySize)
@@ -43,7 +42,7 @@ func (m *JWTMaker) VerifyToken(token string) (*Payload, error) {
 		}
 		return []byte(m.secretKey), nil
 	}
-	jwtToken, err :=  jwt.ParseWithClaims(token, &Payload{}, keyFunc)
+	jwtToken, err := jwt.ParseWithClaims(token, &Payload{}, keyFunc)
 	if err != nil {
 		verr, ok := err.(*jwt.ValidationError)
 		if ok && errors.Is(verr.Inner, ErrExpiredToken) {
@@ -51,7 +50,7 @@ func (m *JWTMaker) VerifyToken(token string) (*Payload, error) {
 		}
 		return nil, ErrInvalidToken
 	}
-		payload, ok := jwtToken.Claims.(*Payload)
+	payload, ok := jwtToken.Claims.(*Payload)
 	if !ok {
 		return nil, ErrInvalidToken
 	}

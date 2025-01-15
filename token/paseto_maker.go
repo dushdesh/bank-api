@@ -11,9 +11,12 @@ type PasetoMaker struct {
 	secretKey paseto.V4SymmetricKey
 }
 
-func NewPasetoMaker(secret paseto.V4SymmetricKey) Maker {
-	secretKey := paseto.NewV4SymmetricKey()
-	return &PasetoMaker{secretKey: secretKey}
+func NewPasetoMaker(tokenKey string) (Maker, error) {
+	secretKey, err := paseto.V4SymmetricKeyFromBytes([]byte(tokenKey))
+	if err != nil {
+		return nil, err
+	}
+	return &PasetoMaker{secretKey: secretKey}, nil
 }
 
 // Create token for a username and duration
@@ -30,6 +33,7 @@ func (m *PasetoMaker) CreateToken(username string, duration time.Duration) (stri
 
 	return token.V4Encrypt(m.secretKey, nil), nil
 }
+
 // Verify token if valid or no
 func (m *PasetoMaker) VerifyToken(token string) (*Payload, error) {
 	parser := paseto.NewParser()
@@ -45,8 +49,8 @@ func (m *PasetoMaker) VerifyToken(token string) (*Payload, error) {
 	if err != nil {
 		return nil, ErrInvalidToken
 	}
-	id, err := uuid.Parse(idStr) 
-	if err !=nil {
+	id, err := uuid.Parse(idStr)
+	if err != nil {
 		return nil, ErrInvalidToken
 	}
 	expireAt, err := t.GetExpiration()
@@ -61,7 +65,7 @@ func (m *PasetoMaker) VerifyToken(token string) (*Payload, error) {
 		Username: username,
 		ExpireAt: expireAt,
 		IssuedAt: issuedAt,
-		ID: id,
+		ID:       id,
 	}
 	return payload, nil
 }

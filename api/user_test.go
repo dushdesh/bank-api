@@ -110,7 +110,7 @@ func TestCreateUserAPI(t *testing.T) {
 				store.EXPECT().
 					CreateUser(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.User{}, &pq.Error{Code:"23505"})
+					Return(db.User{}, &pq.Error{Code: "23505"})
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusConflict, recorder.Code)
@@ -174,11 +174,11 @@ func TestCreateUserAPI(t *testing.T) {
 
 		t.Run(tc.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
-			
+
 			store := mockdb.NewMockStore(ctrl)
 			tc.buildStubs(store)
 
-			server := NewServer(store)
+			server := NewTestServer(t, store)
 			recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -190,8 +190,7 @@ func TestCreateUserAPI(t *testing.T) {
 			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 			request.Header.Set("Content-Type", "application/json")
-			
-		
+
 			server.router.ServeHTTP(recorder, request)
 			tc.checkResponse(recorder)
 		})

@@ -5,14 +5,14 @@ import (
 	"testing"
 	"time"
 
-	"aidanwoods.dev/go-paseto"
 	"github.com/stretchr/testify/require"
 )
 
 func TestPasetoMaker(t *testing.T) {
-	
-	maker := NewPasetoMaker(paseto.NewV4SymmetricKey())
-	
+
+	maker, err := NewPasetoMaker(util.RandomString(32))
+	require.NoError(t, err)
+
 	username := util.RandomOwner()
 
 	duration := time.Minute
@@ -35,8 +35,9 @@ func TestPasetoMaker(t *testing.T) {
 }
 
 func TestExpiredPaseto(t *testing.T) {
-	maker := NewPasetoMaker(paseto.NewV4SymmetricKey())
-	
+	maker, err := NewPasetoMaker(util.RandomString(32))
+	require.NoError(t, err)
+
 	username := util.RandomOwner()
 
 	duration := -time.Minute
@@ -50,5 +51,3 @@ func TestExpiredPaseto(t *testing.T) {
 	require.EqualError(t, err, ErrExpiredToken.Error())
 	require.Nil(t, payload)
 }
-
-

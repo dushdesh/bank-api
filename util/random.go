@@ -53,7 +53,9 @@ func RandomAmount() int64 {
 
 // RandomSignedAmount generates a signed amount
 func RandomSignedAmount() int64 {
-	if RandomBool() { return -RandomAmount() }
+	if RandomBool() {
+		return -RandomAmount()
+	}
 	return RandomAmount()
 }
 

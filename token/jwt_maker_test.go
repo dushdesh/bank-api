@@ -61,7 +61,7 @@ func TestInvalidJWT(t *testing.T) {
 
 	claims := jwt.NewWithClaims(jwt.SigningMethodNone, payload)
 	token, err := claims.SignedString(jwt.UnsafeAllowNoneSignatureType)
-	require.NoError(t, err) 
+	require.NoError(t, err)
 
 	maker, err := NewJWTMaker(util.RandomString(32))
 	require.NoError(t, err)

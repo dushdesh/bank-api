@@ -2,6 +2,9 @@ package api
 
 import (
 	db "bank/db/sqlc"
+	"bank/token"
+	"bank/util"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -11,33 +14,56 @@ import (
 
 // Server serves HTTP requests for banking service
 type Server struct {
-	store  db.Store
-	router *gin.Engine
+	store      db.Store
+	tokenMaker token.Maker
+	config     util.Config
+	router     *gin.Engine
 }
 
-func NewServer(store db.Store) *Server {
-	server := &Server{
-		store: store,
+func NewServer(config util.Config, store db.Store) (*Server, error) {
+	tokenMaker, err := token.NewJWTMaker(config.TokenKey)
+	if err != nil {
+		return nil, fmt.Errorf("cannot create token maker: %w", err)
 	}
-	router := gin.Default()
+	server := &Server{
+		store:      store,
+		tokenMaker: tokenMaker,
+		config:     config,
+	}
 
 	// Add routes
-	server.router = router
+	server.setupRouter()
 
 	// Custom validator engine
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("currency", validCurrency)
 	}
+	
+	return server, nil
+}
 
-	// Accounts
-	router.POST("/users", makeGinHandlerFunc(server.createUser))
-	router.POST("/accounts", makeGinHandlerFunc(server.createAccount))
-	router.GET("/accounts/:id", makeGinHandlerFunc(server.getAccount))
-	router.GET("/accounts", makeGinHandlerFunc(server.listAccounts))
+func (server *Server) setupRouter() {
+	router := gin.Default()
+	
+	
+	// Public routes
+    router.POST("/users", makeGinHandlerFunc(server.createUser))
+    router.POST("/login", makeGinHandlerFunc(server.loginUser))
 
-	// Transfers
-	router.POST("/transfer", makeGinHandlerFunc(server.createTransfer))
-	return server
+    // Protected routes
+    protected := router.Group("/")
+    protected.Use(authMiddleware(server.tokenMaker))
+    {
+        // Accounts
+        protected.POST("/accounts", makeGinHandlerFunc(server.createAccount))
+        protected.GET("/accounts/:id", makeGinHandlerFunc(server.getAccount))
+        protected.GET("/accounts", makeGinHandlerFunc(server.listAccounts))
+
+        // Transfers
+        protected.POST("/transfer", makeGinHandlerFunc(server.createTransfer))
+    }
+	
+	server.router = router
 }
 
 // The HandlerFuncs should return the error of this type embedding the http status code and error

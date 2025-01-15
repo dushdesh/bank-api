@@ -3,6 +3,8 @@ package api
 import (
 	db "bank/db/sqlc"
 	"bank/util"
+	"database/sql"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -11,22 +13,29 @@ import (
 
 // Create a new file called api/user.go. This file will contain the implementation of the user service.
 // CreateUser creates a new user
-type CreateUserRequest struct {
+type createUserRequest struct {
 	Username string `json:"username" binding:"required,alphanum,min=4,max=32"`
 	Password string `json:"password" binding:"required,min=6,max=256"`
 	FullName string `json:"full_name" binding:"required,min=4,max=256"`
 	Email    string `json:"email" binding:"required,email"`
 }
 
-type UserResponse struct {
+type userResponse struct {
 	Username string `json:"username"`
 	FullName string `json:"full_name"`
 	Email    string `json:"email"`
 }
 
+func newUserResponse(user db.User) userResponse {
+	return userResponse{
+		Username: user.Username,
+		FullName: user.FullName,
+		Email:    user.Email,
+	}
+}
 func (s *Server) createUser(ctx *gin.Context) (err error) {
 
-	var req CreateUserRequest
+	var req createUserRequest
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		return &ApiError{Status: http.StatusBadRequest, Err: err.Error()}
@@ -57,19 +66,10 @@ func (s *Server) createUser(ctx *gin.Context) (err error) {
 	}
 
 	// Return the user
-	rsp := UserResponse{ // Create a new UserResponse struct
-		Username: user.Username,
-		FullName: user.FullName,
-		Email:    user.Email,
-	}
+	rsp := newUserResponse(user)
 
 	ctx.JSON(http.StatusOK, rsp)
 	return
-}
-
-type LoginUserRequest struct {
-	Username string `json:"username" binding:"required,alphanum,min=4,max=32"`
-	Password string `json:"password" binding:"required,min=6,max=256"`
 }
 
 // GetUser returns the given user
@@ -82,5 +82,43 @@ func (s *Server) GetUser(ctx *gin.Context) (err error) {
 	}
 
 	ctx.JSON(http.StatusOK, user)
+	return
+}
+
+type loginUserRequest struct {
+	Username string `json:"username" binding:"required,alphanum,min=4,max=32"`
+	Password string `json:"password" binding:"required,min=6,max=256"`
+}
+
+type loginUserResponse struct {
+	AccessToken string       `json:"access_token"`
+	User        userResponse `json:"user"`
+}
+
+func (s *Server) loginUser(ctx *gin.Context) (err error) {
+	var req loginUserRequest
+	if err := ctx.ShouldBind(&req); err != nil {
+		return &ApiError{Status: http.StatusBadRequest, Err: fmt.Sprintf("login failed: %s", err.Error())}
+	}
+	user, err := s.store.GetUser(ctx, req.Username)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return &ApiError{Status: http.StatusNotFound, Err: "login failed, username does not exist"}
+		}
+		return &ApiError{Status: http.StatusInternalServerError, Err: "login failed, failed to get user"}
+	}
+	err = util.CheckPassword(req.Password, user.HashedPassword)
+	if err != nil {
+		return &ApiError{Status: http.StatusUnauthorized, Err: "login failed, not authorized"}
+	}
+	accessToken, err := s.tokenMaker.CreateToken(user.Username, s.config.TokenDuration)
+	if err != nil {
+		return &ApiError{Status: http.StatusInternalServerError, Err: "login failed, failed to generate token"}
+	}
+	rsp := loginUserResponse{
+		AccessToken: accessToken,
+		User:        newUserResponse(user),
+	}
+	ctx.JSON(http.StatusOK, rsp)
 	return
 }
